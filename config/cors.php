@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['localhost', 'localhost:8100', '*.stramucci.ar', '*.postman.co'],
+    'allowed_origins' => ['localhost', 'localhost:8100', 'http://localhost:8100', '*.stramucci.ar', '*.postman.co'],
 
     'allowed_origins_patterns' => [],
 

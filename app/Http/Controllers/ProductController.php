@@ -6,6 +6,8 @@ use App\Models\Product;
 use App\Http\Resources\ProductResource;
 use Illuminate\Http\Request;
 use App\Http\Requests\ProductRequest;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -16,7 +18,8 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return ProductResource::collection(Product::all());
+        // ProductResource::collection(Product::all());
+        return Product::all();
     }
 
     /**
@@ -31,26 +34,23 @@ class ProductController extends Controller
         $product->name = $request->input('name');
         $product->description = $request->input('description');
         $product->price = $request->input('price');
-        if ($product->photo) {
-            $url_photo = $this->upload($request->file('photo'));
-            $product->photo = $url_photo;
+        if ($request->input('photo')) {
+            $base64_image = $request->input('photo');
+            @list(, $file_data) = explode(';', $base64_image);
+            @list(, $file_data) = explode(',', $file_data); 
+            $imageName = Str::random(10).'.'.'png';   
+            if (!Storage::disk('public')->put($imageName, base64_decode($file_data), 'public')) {
+                return response()->json(['message' => 'Error storing photo'], 500);
+            }
+            $product->photo = Storage::url($imageName);
         }
         
         $result = $product->save();
 
         if ($result) {
-            return response()->json(['message' => 'Product created succesfully'], 201);
+            return response()->json(['message' => 'Product created successfully'], 201);
         }
         return response()->json(['message' => 'Error creating Product'], 500);
-    }
-
-    private function upload($photo) {
-        $path_info = pathinfo($photo->getClientOriginalName());
-        $products_path = 'images/products';
-
-        $rename = uniqid() . '.' . $path_info['extension'];
-        $photo->move(public_path() . "/$products_path", $rename);
-        return "$products_path/$rename";
     }
 
     /**
